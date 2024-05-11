@@ -17,7 +17,6 @@ const client = new Client({
 		GatewayIntentBits.GuildModeration,
 	],
 });
-
 client.on(Events.ClientReady, handleClientReady);
 client.on(Events.MessageCreate, handleMessageCreate);
 client.on(Events.MessageUpdate, handleMessageUpdate);

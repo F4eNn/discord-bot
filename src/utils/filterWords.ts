@@ -26,7 +26,7 @@ export const isProfanityWord = async (
 					console.log(error);
 				}
 			}
-			const profanityWarning = warnComponent(msg);
+			const profanityWarning = warnComponent(msg as Message);
 			const notification = sendNotificationToUser(content, bannedWord);
 
 			msg.channel.send({ embeds: [profanityWarning] });
