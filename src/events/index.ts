@@ -1,5 +1,5 @@
-import { handleClientReady } from './clientReady.ts';
-import { handleMessageCreate } from './messageCreate.ts';
-import { handleMessageUpdate } from './messageUpdate.ts';
+import { handleClientReady } from './clientReady';
+import { handleMessageCreate } from './messageCreate';
+import { handleMessageUpdate } from './messageUpdate';
 
 export { handleClientReady, handleMessageCreate, handleMessageUpdate };

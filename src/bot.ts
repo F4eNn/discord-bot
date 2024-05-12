@@ -1,12 +1,12 @@
 import 'dotenv/config';
-
 import { Client, GatewayIntentBits, Events } from 'discord.js';
-import { handleClientReady, handleMessageCreate, handleMessageUpdate } from './events/index.js';
+import { handleClientReady, handleMessageCreate, handleMessageUpdate } from './events/index';
+import { chatCommandInteraction } from './commands';
 
 const { DISCORD_TOKEN } = process.env;
 
 if (!DISCORD_TOKEN) {
-	throw new Error('Missing Env variables');
+	throw new Error('Missing Eviroment variables');
 }
 
 const client = new Client({
@@ -17,8 +17,10 @@ const client = new Client({
 		GatewayIntentBits.GuildModeration,
 	],
 });
-client.on(Events.ClientReady, handleClientReady);
+client.once(Events.ClientReady, handleClientReady);
 client.on(Events.MessageCreate, handleMessageCreate);
 client.on(Events.MessageUpdate, handleMessageUpdate);
+
+client.on(Events.InteractionCreate, chatCommandInteraction);
 
 client.login(DISCORD_TOKEN);
