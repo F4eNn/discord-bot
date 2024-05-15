@@ -3,60 +3,63 @@ import { bold, ChatInputCommandInteraction } from 'discord.js';
 import prisma from '../../config/prisma-client';
 
 export const handleDailyCommand = async (interaction: ChatInputCommandInteraction) => {
-	if (!interaction.inGuild()) {
-		interaction.reply('The daily command can be usend only on server');
-		return;
-	}
-	const dailyAmount = 500;
-	const currentDate = new Date();
+    if (!interaction.inGuild()) {
+        interaction.reply('The daily command can be usend only on server');
+        return;
+    }
+    const dailyAmount = 500;
+    const currentDate = new Date();
 
-	const member = interaction.user;
-	const memberIds = {
-		userId: interaction.user.id,
-		guildId: interaction.guildId,
-	};
+    const guildName = interaction.guild?.name || 'None';
+    const guildId = interaction.guildId;
+    const userId = interaction.user.id;
 
-	try {
-		const res = await prisma.user.findUnique({
-			where: { ...memberIds },
-			include: { daily: true },
-		});
+    try {
+        const guild = await prisma.guild.findUnique({
+            where: { guildId },
+            include: { user: { where: { userId } } },
+        });
 
-		const isUserExistsAndClaimedReward = res && res.daily?.lastDaily.toDateString() === new Date().toDateString();
+        if (guild && !!guild.user.length) {
+            const userId = guild.user[0].id;
+            const userDaily = await prisma.daily.findUnique({ where: { userId } });
 
-		if (isUserExistsAndClaimedReward) {
-			return interaction.reply({
-				content: 'You have already claimed your daily reward, come back tomorrow ',
-				ephemeral: true,
-			});
-		}
-		const newUser = await prisma.user.upsert({
-			where: { userId: interaction.user.id },
-			update: res
-				? {
-						daily: {
-							upsert: {
-								where: { userId: memberIds.userId },
-								update: { balance: res.daily!.balance + dailyAmount, lastDaily: currentDate },
-								create: { balance: dailyAmount },
-							},
-						},
-				  }
-				: {},
-			create: { ...memberIds, name: member.displayName, daily: { create: { balance: dailyAmount } } },
-			include: { daily: true },
-		});
+            if (!userDaily) {
+                throw new Error("Something bad happened, Couldn't fetch user daily");
+            }
+            const isAlreadyClaimed = userDaily?.lastDaily.toDateString() === new Date().toDateString();
 
-		await interaction.reply({
-			content: `Your account has been credited with ${bold(
-				String(dailyAmount)
-			)} daily points and your current score is now ${bold(String(newUser.daily?.balance))} `,
-			ephemeral: true,
-		});
-	} catch (error) {
-		if (error instanceof PrismaClientKnownRequestError) {
-			console.log(error.message);
-		}
-		console.log(error);
-	}
+            if (isAlreadyClaimed) {
+                return interaction.reply({
+                    content: 'You have already claimed your daily reward, come back tomorrow ',
+                    ephemeral: true,
+                });
+            }
+
+            const updatedUserDailt = await prisma.daily.update({
+                where: { userId },
+                data: { balance: userDaily.balance + dailyAmount, lastDaily: currentDate },
+            });
+            await interaction.reply({
+                content: `Your account has been credited with ${bold(
+                    String(dailyAmount)
+                )} daily points and your current score is now ${bold(String(updatedUserDailt.balance))} `,
+                ephemeral: true,
+            });
+            
+        } else {
+            const createdUser = await prisma.user.create({
+                data: { userId, guildId, name: interaction.user.username, guildName },
+            });
+            const daily = await prisma.daily.create({
+                data: { balance: dailyAmount, lastDaily: currentDate, userId: createdUser.id },
+            });
+            interaction.reply('dodano');
+        }
+    } catch (error) {
+        if (error instanceof PrismaClientKnownRequestError) {
+            return console.log(error.message);
+        }
+        console.log(error);
+    }
 };
