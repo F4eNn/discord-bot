@@ -2,22 +2,24 @@ import 'dotenv/config';
 import { Client, GatewayIntentBits, Events } from 'discord.js';
 import { handleClientReady, handleMessageCreate, handleMessageUpdate } from './events/index';
 import { chatCommandInteraction } from './commands';
+import { handleCreateGuild } from './events/handleCreateGuild';
 
 const { DISCORD_TOKEN } = process.env;
 
 if (!DISCORD_TOKEN) {
-	throw new Error('Missing Eviroment variables');
+    throw new Error('Missing Eviroment variables');
 }
 
 const client = new Client({
-	intents: [
-		GatewayIntentBits.Guilds,
-		GatewayIntentBits.GuildMessages,
-		GatewayIntentBits.MessageContent,
-		GatewayIntentBits.GuildModeration,
-	],
+    intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.MessageContent,
+        GatewayIntentBits.GuildModeration,
+    ],
 });
 client.once(Events.ClientReady, handleClientReady);
+client.on(Events.GuildCreate, handleCreateGuild);
 client.on(Events.MessageCreate, handleMessageCreate);
 client.on(Events.MessageUpdate, handleMessageUpdate);
 
