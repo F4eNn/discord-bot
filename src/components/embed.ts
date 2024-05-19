@@ -11,10 +11,16 @@ export const warnComponent = (msg: Message) => {
     return warn;
 };
 
-export const sendNotificationToUser = (content: Message['content'], bannedWord: string) => {
+export const sendNotificationToUser = ({
+    bannedWord,
+    content,
+}: {
+    bannedWord: string;
+    content: Message['content'] ;
+}) => {
     const sendToUser = new EmbedBuilder()
         .setColor('#c30010')
         .setTitle('Moderation Alert')
-        .setFields({ name: 'Banned word', value: quote(bannedWord) }, { name: 'Message', value: content });
+        .setFields({ name: 'Banned word', value: quote(bannedWord) }, { name: 'Message', value: content});
     return sendToUser;
 };
