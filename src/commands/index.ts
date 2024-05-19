@@ -6,7 +6,7 @@ export const chatCommandInteraction = async (interaction: Interaction) => {
     if (!interaction.isChatInputCommand()) return;
 
     switch (interaction.commandName) {
-        case COMMANDS.Greeting:
+        case COMMANDS.Hello:
             handleGreetingCommand(interaction);
             break;
         case COMMANDS.Meme:
