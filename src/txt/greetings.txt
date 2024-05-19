@@ -12,5 +12,4 @@ Ahoj!
 Hej Hej!
 Hi!
 Hello!
-Yo!
 
