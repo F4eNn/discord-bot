@@ -1,6 +1,7 @@
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { bold, ChatInputCommandInteraction } from 'discord.js';
 import prisma from '../../config/prisma-client';
+import { Daily } from '@prisma/client';
 
 export const handleDailyCommand = async (interaction: ChatInputCommandInteraction) => {
     if (!interaction.inGuild()) {
@@ -13,6 +14,15 @@ export const handleDailyCommand = async (interaction: ChatInputCommandInteractio
     const guildName = interaction.guild?.name || 'None';
     const guildId = interaction.guildId;
     const userId = interaction.user.id;
+
+    const sendNotificationScore = async (updatedBalance: Daily['balance']) => {
+        await interaction.reply({
+            content: `Your account has been credited with ${bold(
+                String(dailyAmount)
+            )} daily points and your current score is now ${bold(String(updatedBalance))} `,
+            ephemeral: true,
+        });
+    };
 
     try {
         const guild = await prisma.guild.findUnique({
@@ -40,13 +50,7 @@ export const handleDailyCommand = async (interaction: ChatInputCommandInteractio
                 where: { userId },
                 data: { balance: userDaily.balance + dailyAmount, lastDaily: currentDate },
             });
-            await interaction.reply({
-                content: `Your account has been credited with ${bold(
-                    String(dailyAmount)
-                )} daily points and your current score is now ${bold(String(updatedUserDailt.balance))} `,
-                ephemeral: true,
-            });
-            
+            await sendNotificationScore(updatedUserDailt.balance);
         } else {
             const createdUser = await prisma.user.create({
                 data: { userId, guildId, name: interaction.user.username, guildName },
@@ -54,7 +58,8 @@ export const handleDailyCommand = async (interaction: ChatInputCommandInteractio
             const daily = await prisma.daily.create({
                 data: { balance: dailyAmount, lastDaily: currentDate, userId: createdUser.id },
             });
-            interaction.reply('dodano');
+
+            await sendNotificationScore(daily.balance);
         }
     } catch (error) {
         if (error instanceof PrismaClientKnownRequestError) {
